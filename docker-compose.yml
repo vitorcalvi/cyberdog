@@ -1,0 +1,27 @@
+version: "3.8"
+services:
+  cyberdog-dev:
+    build:
+      context: ./docker
+      dockerfile: Dockerfile.galactic
+    image: cyberdog:galactic
+    container_name: cyberdog-dev
+    privileged: true
+    network_mode: host
+    environment:
+      - DISPLAY=${DISPLAY:-:0}
+      - ROS_DOMAIN_ID=0
+      - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - .:/workspace:rw
+      - /dev/shm:/dev/shm
+      - /var/run/docker.sock:/var/run/docker.sock
+    working_dir: /workspace
+    deploy:
+      resources:
+        limits:
+          cpus: "4.0"
+          memory: 8G
+    stdin_open: true
+    tty: true
