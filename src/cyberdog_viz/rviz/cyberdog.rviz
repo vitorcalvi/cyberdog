@@ -1,0 +1,76 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+  - Class: rviz_common/Views
+    Name: Views
+Visualization Manager:
+  Class: rviz_default_plugins/VisualizationManager
+  Displays:
+    - Alpha: 0.5
+      Class: rviz_default_plugins/Displays/Grid
+      Name: Grid
+      Reference Frame: <Fixed Frame>
+      Plane Cell Count: 40
+      Color: 160; 160; 164
+    - Beta: 0.5
+      Class: rviz_default_plugins/Displays/RobotModel
+      Name: RobotModel
+      Description: CyberDog robot model
+      Visual Enabled: true
+    - Alpha: 1
+      Class: rviz_default_plugins/Displays/TF
+      Name: TF
+      Show Arrows: true
+      Show Axes: true
+    - Class: rviz_default_plugins/Displays/Image
+      Name: Camera
+      Topic: /camera/image_raw
+      Transport Hint: Unspecified
+    - Class: rviz_default_plugins/Displays/MarkerArray
+      Name: Markers
+      Topic: /visualization_marker
+      Marker_namespace: markers
+    - Class: rviz_default_plugins/Displays/Polygon
+      Name: FootPolygons
+      Topic: /polygon/foot_polygons
+      Color: 255; 0; 0
+      Alpha: 0.7
+    - Class: rviz_default_plugins/Displays/Path
+      Name: Path
+      Topic: /path
+  Global Options:
+    Background Color: 48; 48; 48
+    Fixed Frame: base_link
+    Frame Rate: 30
+  Name: root
+  Tools:
+    - Class: rviz_common/ToolManager
+    Value: true
+  Value: true
+    - Class: rviz_common/Transformation
+      Name: Current View
+      Class: rviz_default_plugins/ThirdPersonViewController
+      Distance: 2.28 0.5
+      Focal Point:
+        X: 0
+        Y: 0
+        Z: 0
+      Pitch: 0.5
+      Target Frame: base_link
+      Yaw: 0.785
+      Stereo Rendering:
+        Stereo Eye Separation: 0.06
+        Swap Stereo Eyes: false
+        Value: false
+    Saved: ~
+  Views:
+    Current:
+      Class: rviz_default_plugins/ThirdPersonViewController
+      Distance: 7.5
+      Enable Stereo Rendering: false
+      Focal Shape Fixed Size: true
+      Focal Shape Size: 0.05
+      Invert Z Axis: false
+      Value: ThirdPersonFollower (rviz_default_plugins)
+      Value: true
+    Saved: ~

@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<?xml-model href="http://ros.org/schema/package_format3">
+<package format="3">
+  <name>cyberdog_teleop</name>
+  <version>1.0.0</version>
+  <description>CyberDog teleoperation package</description>
+  <maintainer email="vitor@example.com">Vitor Calvi</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_python</buildtool_depend>
+
+  <depend>rclcpp</depend>
+  <depend>geometry_msgs</depend>
+  <depend>cyberdog_interfaces</depend>
+
+  <exec_depend>teleop_twist_keyboard</exec_depend>
+  <exec_depend>joy_linux</exec_depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  <exec_depend>teleop_twist_keyboard</exec_depend>
+  <exec_depend>joy_linux</exec_depend>
+  <group_depend>cyberdog_interfaces</group_depend>
+  </export>
+</package>
