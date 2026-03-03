@@ -1,0 +1,100 @@
+version: "3.8"
+
+services:
+  # Main CyberDog GUI Stack
+  cyberdog-gui:
+    image: cyberdog:galactic
+    container_name: cyberdog-gui
+    privileged: true
+    network_mode: host
+    environment:
+      - ROS_DOMAIN_ID=0
+      - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+      - DISPLAY=:0
+    volumes:
+      - ./src:/workspace/src:ro
+      - ./build:/workspace/build
+      - ./install:/workspace/install
+      - ./log:/workspace/log
+      - cyberdog-data:/workspace
+    working_dir: /workspace
+    command: >
+      bash -c "source /opt/ros/galactic/setup.bash &&
+               source /workspace/install/setup.bash &&
+               ros2 launch cyberdog_viz bringup.launch.py use_rviz:=false"
+    healthcheck:
+      test: ["CMD", "bash", "-c", "ros2 topic list | grep -q cmd_vel || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 4G
+
+  # Altair-GUI Web Interface
+  cyberdog-web:
+    image: node:20-alpine
+    container_name: cyberdog-web
+    working_dir: /app
+    volumes:
+      - ./src/cyberdog_web:/app:ro
+    ports:
+      - "5173:5173"
+    command: >
+      sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 5173"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:5173"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 2G
+
+  # FlexBE WebUI
+  flexbe-webui:
+    image: cyberdog:galactic
+    container_name: flexbe-webui
+    privileged: true
+    network_mode: host
+    environment:
+      - ROS_DOMAIN_ID=0
+      - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+    volumes:
+      - ./src:/workspace/src:ro
+      - ./build:/workspace/build
+      - ./install:/workspace/install
+      - ./log:/workspace/log
+    working_dir: /workspace
+    command: >
+      bash -c "source /opt/ros/galactic/setup.bash &&
+               source /workspace/install/setup.bash &&
+               ros2 launch flexbe_webui flexbe_ocs.launch.py"
+    healthcheck:
+      test: ["CMD", "bash", "-c", "ros2 service list | grep -q flexbe || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    depends_on:
+      - cyberdog-gui
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 2G
+
+volumes:
+  cyberdog-data:
+
+# Network exposes via host mode:
+# - Foxglove Bridge: http://192.168.20.10:8765
+# - Rosbridge WebSocket: ws://192.168.20.10:9090
+# - Altair-GUI: http://192.168.20.10:5173
+# - FlexBE WebUI: http://192.168.20.10:8080 (if configured)
