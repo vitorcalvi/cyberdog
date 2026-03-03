@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>cyberdog_flexbe_states</name>
+  <version>1.0.0</version>
+  <description>CyberDog FlexBE States - Custom states for quadruped behavior control</description>
+  <maintainer email="vitor@calvi.me">Vitor Calvi</maintainer>
+  <license>MIT</license>
+  <buildtool_depend>ament_cmake_python</buildtool_depend>
+  <depend>rclpy</depend>
+  <depend>flexbe_core</depend>
+  <depend>flexbe_states</depend>
+  <depend>geometry_msgs</depend>
+  <depend>std_msgs</depend>
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

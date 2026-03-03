@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>cyberdog_flexbe_behaviors</name>
+  <version>1.0.0</version>
+  <description>CyberDog FlexBE Behaviors - Behavior definitions for quadruped control</description>
+  <maintainer email="vitor@calvi.me">Vitor Calvi</maintainer>
+  <license>MIT</license>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>flexbe_core</depend>
+  <depend>flexbe_states</depend>
+  <depend>cyberdog_flexbe_states</depend>
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
