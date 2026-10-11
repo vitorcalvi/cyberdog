@@ -471,7 +471,7 @@ class writeWifiParameterFromPhone(Characteristic):
         Characteristic.__init__(
             self, bus, index,
             self.WIFI_CHRC_UUID_WRITE,
-            ['write-without-response'],
+            ['encrypt-authenticated-write'],
             service)
 
     # Write cmd for wlan from phone
@@ -481,15 +481,28 @@ class writeWifiParameterFromPhone(Characteristic):
         mainIP = ''
         # mainStatus = STATUS_WIFI_GET_INFO
         wifiConnectFlag = True
-        log.logger.info('WriteValue value: ' + repr(bytes(value)))
-        log.logger.info('WriteValue value utf' + repr(bytes(value).decode('utf-8')))
-        format_value = bytes(value).decode('utf-8')  # ''.join(chr(byte) for byte in value)
-        log.logger.info('WriteValue format value ' + format_value)
-        text = json.loads(format_value)
+        payload = bytes(value)
+        if len(payload) > 512:
+            raise InvalidValueLengthException()
+        try:
+            text = json.loads(payload.decode('utf-8'))
+        except (UnicodeDecodeError, ValueError):
+            raise InvalidArgsException()
+        if not isinstance(text, dict):
+            raise InvalidArgsException()
         ssid = text.get('ssid')
         pwd = text.get('pwd')
         ns = text.get('ns')
         ip = text.get('ip')  # get phone ip address
+        # Keep malformed/prohibited provisioning values out of privileged helpers.
+        if not isinstance(ssid, str) or len(ssid.encode('utf-8')) > 32 or any(ord(c) < 32 for c in ssid):
+            raise InvalidArgsException()
+        if not isinstance(pwd, str) or len(pwd) > 128 or any(ord(c) < 32 for c in pwd):
+            raise InvalidArgsException()
+        if ns is not None and (not isinstance(ns, str) or len(ns) > 64 or not all(c.isalnum() or c in '_-' for c in ns)):
+            raise InvalidArgsException()
+        if ip is not None and (not isinstance(ip, str) or len(ip) > 64):
+            raise InvalidArgsException()
         if ssid:
             log.logger.info('WriteValue ssid ' + repr(text['ssid']))
             mainSSID = ssid
@@ -498,7 +511,6 @@ class writeWifiParameterFromPhone(Characteristic):
             mainSSID = ''
 
         if pwd:
-            log.logger.info('WriteValue pwd ' + repr(text['pwd']))
             mainPwd = pwd
         else:
             log.logger.warning('WriteValue pwd is none!!!')
@@ -628,7 +640,7 @@ def handleThread():
 
     if mainSSID == btwifitool.activeWifiSsid():  # compare current ssid and write ssid
         conpwd = btwifitool.getPwd(mainSSID)  # get current ssid pwd from file
-        log.logger.info('handleThread getPwd 1 ' + repr(conpwd))
+        log.logger.debug('handleThread current Wi-Fi password fetched')
         if conpwd == mainPwd:  # same pwd means the connection is already success
             mainStatus = STATUS_WIFI_SUCCESS
             log.logger.debug('handleThread The ' + repr(mainSSID) +
@@ -677,9 +689,9 @@ def handleThread():
         log.logger.info('handleThread first nmcliConnectWifi result' + cmdoutput)
     else:  # change pwd and reconnect
         conpwd = btwifitool.getPwd(mainSSID)  # get old pwd
-        log.logger.info('handleThread getPwd 2 ' + repr(conpwd))
+        log.logger.debug('handleThread current Wi-Fi password fetched')
         if conpwd != mainPwd:
-            log.logger.debug('exchange oldpwd is:' + conpwd + ' newpwd is: ' + mainPwd)
+            log.logger.debug('Wi-Fi credentials changed; applying new configuration')
             btwifitool.exchangePSK(mainSSID, mainPwd)  # exchange pwd
             log.logger.debug('restartNetworkService.........')
             btwifitool.restartNetworkService()  # must restart network-manager
