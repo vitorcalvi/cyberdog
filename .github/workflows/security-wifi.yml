@@ -1,0 +1,17 @@
+name: Wi-Fi provisioning security regression
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  wifi-security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m py_compile src/cyberdog_interaction/cyberdog_wireless/bluetooth/bluetooth/btwifitool.py src/cyberdog_interaction/cyberdog_wireless/bluetooth/bluetooth/gattserver.py
+      - run: python -m unittest discover -s tests -p test_wifi_command_safety.py -v

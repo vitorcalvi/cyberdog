@@ -82,16 +82,13 @@ def activeWifiBssid():
 
 # do a new wlan connect
 def nmcliConnectWifi(ssid, pwd):
-    # global log
-    cmd = "sudo nmcli device wifi connect '"
-    cmd += ssid
-    cmd += "' password '"
-    cmd += pwd
-    cmd += "'"
-    output = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    output.wait()  # wait for cmd done
-    tmp = str(output.stdout.read(), encoding='utf-8')
-    return tmp
+    # Wi-Fi values originate from Bluetooth; never interpolate into a shell.
+    output = subprocess.run(
+        ['sudo', 'nmcli', 'device', 'wifi', 'connect', ssid, 'password', pwd],
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=30,
+        check=False,
+    )
+    return output.stdout
 
 
 # parsing the wlan connect/reconnect return value
@@ -179,31 +176,19 @@ def getPwd(ssid):
                     if line[3:-1] == ssid:
                         for lin in lines:
                             if lin.find('psk=') != -1:
-                                log.logger.debug('getPwd get this pwd=' + repr(lin[4:-1]))
+                                # Never write a Wi-Fi pre-shared key to logs.
                                 return lin[4:-1]
 
 
 # change the pwd in the ssid file
 def exchangePSK(ssid, pwd):
-    sedcmd = "sudo sed -i 's/^psk=.*/psk="
-    sedcmd += pwd  # do not need ' '
-    sedcmd += "/' "
-    sedcmd += NETWORK_PATH
-    sedcmd += "'"
-
-    # sedcmd += ssid
-    dirs = os.listdir(NETWORK_PATH)
-    for file in dirs:
-        with open(NETWORK_PATH + file, 'r+') as f:
-            lines = f.readlines()
-            for line in lines:
-                if line.find('ssid=') != -1:
-                    if line[5:-1] == ssid:
-                        sedcmd += file
-    sedcmd += "'"
-    output = subprocess.Popen(sedcmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    tmp = str(output.stdout.read(), encoding='utf-8')
-    return tmp
+    # Configure the connection through nmcli, without a constructed sed shell.
+    output = subprocess.run(
+        ['sudo', 'nmcli', 'connection', 'modify', ssid, 'wifi-sec.psk', pwd],
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=30,
+        check=False,
+    )
+    return output.stdout
 
 
 # disconnect wlan
@@ -240,16 +225,12 @@ def restartNetworkService():
 
 # reconnect a ssid, like: nmcli connection up ifname wlan0, nmcli device connect wlan0
 def connectUpWifi(ssid):
-    restartcmd = "sudo nmcli connect up '"
-    restartcmd += ssid
-    restartcmd += "'"
-    output = subprocess.Popen(restartcmd,
-                              shell=True,
-                              stdout=subprocess.PIPE,
-                              stderr=subprocess.STDOUT)
-    output.wait()
-    tmp = str(output.stdout.read(), encoding='utf-8')
-    return tmp
+    output = subprocess.run(
+        ['sudo', 'nmcli', 'connection', 'up', ssid],
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=30,
+        check=False,
+    )
+    return output.stdout
 
 
 # get current robot ip
@@ -293,13 +274,11 @@ def disconnectLEDevice(handle):
         log.logger.debug('not need to disconnect')
     else:
         log.logger.debug('The handle ' + repr(handle) + 'is going to disconnect')
-        cmd = 'hcitool ledc'
-        cmd += handle
-        output = subprocess.Popen(cmd,
-                                  shell=True,
-                                  stdout=subprocess.PIPE,
-                                  stderr=subprocess.STDOUT)
-        output.wait()
+        subprocess.run(
+            ['hcitool', 'ledc', str(handle).strip()],
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            timeout=10, check=False,
+        )
 
 
 # get ros2 status
